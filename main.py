@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #学习怎么用xpinyin或pypinyin OK
 #把所有成语中出现过的字和对应的注音存到word_dict.txt NO
 #重点搞定judge函数，并完成单元测试 OK
@@ -10,20 +11,23 @@
 #贝使用自定义拼音风格
 # ü
 from pypinyin import pinyin, Style,lazy_pinyin
-import re
-import random
-import datetime
-
+from re import sub, match
+from random import seed as sd
+from random import randrange
+from datetime import datetime
+# import chinese
+from colorama import init, Fore, Back
+# init(autoreset=True)
 
 def game_simulation(seed=0,trys=10):
     word_len = 4
     with open("chengyu2231.txt",'r',encoding='utf-8') as f:
         chengyu_list = f.read().rstrip('\n').splitlines()
     if seed != 0:
-        random.seed(seed)
-    chosen_word = chengyu_list[random.randrange(len(chengyu_list))]
+        sd(seed)
+    chosen_word = chengyu_list[randrange(len(chengyu_list))]
     # print(chosen_word)
-    now = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+    now = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
     with open("answer.txt",'a', encoding='utf-8') as f:
         f.write(now+" ")
         f.write(chosen_word+"\n")
@@ -35,7 +39,9 @@ def game_simulation(seed=0,trys=10):
             else:
                 print("invalid chengyu, please try again~")
         hanzi,tone,word_notone,shengmu,yunmu,word_notone2,tone2,shengmu2,yunmu2 = judge(chosen_word, trying)
-        print_result(trying,hanzi,tone,word_notone,shengmu,yunmu,word_notone2,tone2,shengmu2,yunmu2)
+        # print_result(trying,hanzi,tone,word_notone,shengmu,yunmu,word_notone2,tone2,shengmu2,yunmu2)
+        align_print_windows_result(8, trying, hanzi, tone, word_notone, shengmu, yunmu, word_notone2, tone2, shengmu2,
+                                   yunmu2)
         if 0 not in hanzi and 1 not in hanzi:
             if i <= 4:
                 print("congratulations! you are \033[33;1mso \033[34;1mso \033[32;1mso \033[35;1mSMART!\033[0m loving you~ Try times =", i)
@@ -75,7 +81,7 @@ def get_lazy_pinyin(word):
         else:
             print("\033[31;1mError, word {0} {1} didn't have tone\033[0m".format(word[idx],i))
             i_notone = i
-        shengmu = re.match('sh|ch|zh|[bpmfdtnlgkhjqxrzcsyw]',i_notone)
+        shengmu = match('sh|ch|zh|[bpmfdtnlgkhjqxrzcsyw]',i_notone)
         if shengmu is None:
             shengmu_list.append(shengmu) # shengmu = None
             shengmu = ''
@@ -85,9 +91,9 @@ def get_lazy_pinyin(word):
         else:
             shengmu = shengmu.group()
             shengmu_list.append(shengmu)
-            yunmu = re.sub('sh|ch|zh|[bpmfdtnlgkhjqxrzcsyw]', '', i_notone, 1)
+            yunmu = sub('sh|ch|zh|[bpmfdtnlgkhjqxrzcsyw]', '', i_notone, 1)
             if yunmu in ['u','un','ue','uan'] and shengmu in ['j','q','x','y']:
-                yunmu = re.sub('u','ü',yunmu)
+                yunmu = sub('u','ü',yunmu)
                 # print("\033[33;1mMind, word {0} {1} from u->ü, {2}\033[0m".format(word[idx], i,yunmu))
             yunmu_list.append(yunmu)
         if len(yunmu) == 0:
@@ -215,6 +221,9 @@ def print_result(trying,hanzi,tone,word_notone,shengmu,yunmu,word_notone2,tone2,
 def test_print_result(chosen_word, trying):
     hanzi, tone, word_notone, shengmu, yunmu, word_notone2, tone2,shengmu2,yunmu2 = judge(chosen_word, trying)
     print_result(trying, hanzi, tone, word_notone, shengmu, yunmu, word_notone2, tone2,shengmu2,yunmu2)
+def test_align_print_windows_result(chosen_word, trying):
+    hanzi, tone, word_notone, shengmu, yunmu, word_notone2, tone2,shengmu2,yunmu2 = judge(chosen_word, trying)
+    align_print_windows_result(8,trying, hanzi, tone, word_notone, shengmu, yunmu, word_notone2, tone2,shengmu2,yunmu2)
 
 def my_align(string, length=0, align_type='-'):
     """
@@ -231,7 +240,7 @@ def my_align(string, length=0, align_type='-'):
     #用re找到所有彩色输出的地方，并用raw_str保存去除彩色输出命令的string部分，用来计算补充空格数，然后相同
     # print(len(string))
     # print(string)
-    raw_str = re.sub('\\033\[.+?m','',string)
+    raw_str = sub('\\033\[.+?m','',string)
     # raw_str = re.sub(r'\033\[.+?m','',string) #这样和上面等价
     # print(len(raw_str))
     # print(raw_str)
@@ -246,6 +255,73 @@ def my_align(string, length=0, align_type='-'):
     elif align_type == '-':  # 居中对齐
         return ' ' * int(len_sp / 2) + string + ' ' * (len_sp - int(len_sp / 2))
     return string + ' ' * len_sp  # 左对齐
+def calculate_spaces(string, align_len): #默认居中
+    len_ch = (len(string.encode('gbk')) - len(string)) * 2  # 中文折合的半角字符总数
+    len_en = len(string) * 2 - len(string.encode('gbk'))  # 英文折合的半角字符总数
+    len_sp = align_len - len_ch - len_en  # 补充空格总数
+    return (' '* int(len_sp / 2),' ' * (len_sp - int(len_sp / 2)))
+
+def align_print_windows_result(align_len,trying,hanzi,tone,word_notone,shengmu,yunmu,word_notone2,tone2,shengmu2,yunmu2):#两行，第一行注音，第二行文字
+    num = len(trying)
+    hanzi_spaces,pinyin_spaces = [],[]
+    for i in range(num):
+        hanzi_spaces.append(calculate_spaces(trying[i],align_len))
+        pinyin_spaces.append(calculate_spaces(word_notone2[i]+tone2[i],align_len))
+    all_hanzi_string,all_pinyin_string = "",""
+    for idx in range(num):
+        #如果整体完全对，就整体绿
+        #如果整体对了但位置不对，就整体蓝，除非其中有绿色的声母或韵母，换句话说绿+蓝或者蓝+绿，所以和声母是否为None无关
+        #如果整体不对，就按普通的声母+韵母。
+        pinyin_string = pinyin_spaces[idx][0]
+        if shengmu2[idx] is None:
+            shengmu2[idx] = ''
+        if word_notone[idx] == 2:
+            pinyin_string = pinyin_string+Fore.GREEN+"{0}".format(word_notone2[idx])+Fore.RESET
+        elif word_notone[idx] == 1:
+            if shengmu[idx] == 2:
+                pinyin_string = pinyin_string +Fore.GREEN+"{0}".format(shengmu2[idx])+Fore.BLUE+"{0}".format(yunmu2[idx])+Fore.RESET
+            elif yunmu[idx] == 2:
+                pinyin_string = pinyin_string +Fore.BLUE+ "{0}".format(shengmu2[idx])+Fore.GREEN+"{0}".format(yunmu2[idx])+Fore.RESET
+            else:
+                pinyin_string = pinyin_string +Fore.BLUE+ "{0}".format(word_notone2[idx])+Fore.RESET
+        else:
+            if shengmu[idx] == 2:
+                pinyin_string = pinyin_string + Fore.GREEN+"{0}".format(shengmu2[idx]) +Fore.RESET
+            elif shengmu[idx] == 1:
+                pinyin_string = pinyin_string + Fore.YELLOW+"{0}".format(shengmu2[idx])+Fore.RESET
+            else:
+                pinyin_string = pinyin_string + "{0}".format(shengmu2[idx])
+            if yunmu[idx] == 2:
+                pinyin_string = pinyin_string + Fore.GREEN+"{0}".format(yunmu2[idx])+Fore.RESET
+            elif yunmu[idx] == 1:
+                pinyin_string = pinyin_string + Fore.YELLOW+"{0}".format(yunmu2[idx])+Fore.RESET
+            else:
+                pinyin_string = pinyin_string + "{0}".format(yunmu2[idx])
+
+        if tone[idx] == 2:
+            pinyin_string = pinyin_string+Fore.GREEN+"{0}".format(tone2[idx])+Fore.RESET
+        elif hanzi[idx] == 1:
+            pinyin_string=pinyin_string+Fore.YELLOW+"{0}".format(tone2[idx])+Fore.RESET
+        else:
+            pinyin_string=pinyin_string+"{0}".format(tone2[idx])
+        # pinyin_string = my_align(pinyin_string,8)
+        pinyin_string +=pinyin_spaces[idx][1]
+        # print(pinyin_string)
+        all_pinyin_string += pinyin_string
+    print(all_pinyin_string)
+    for idx in range(num):
+        hanzi_string = hanzi_spaces[idx][0]
+        if hanzi[idx] == 2:
+            hanzi_string = hanzi_string+ Fore.BLACK+Back.GREEN+"{0}".format(trying[idx])+Fore.RESET+Back.RESET
+        elif hanzi[idx] == 1:
+            hanzi_string=hanzi_string+Fore.BLACK+Back.YELLOW+"{0}".format(trying[idx])+Fore.RESET+Back.RESET
+        else:
+            hanzi_string=hanzi_string+Fore.WHITE+Back.BLACK+"{0}".format(trying[idx])+Fore.RESET+Back.RESET
+        # hanzi_string = my_align(hanzi_string,8)
+        hanzi_string +=hanzi_spaces[idx][1]
+        # print(hanzi_string)
+        all_hanzi_string +=hanzi_string
+    print(all_hanzi_string)
 
 def test_unit():
     # with open("test.txt",'r',encoding="utf-8") as f:
@@ -259,7 +335,8 @@ def test_unit():
         # get_initial_final_practical(word)
     # get_lazy_pinyin("晕轮女路鱼")
     # judge("无哎","爱爱")
-    # test_print_result("无长碍","深称爱")
+    test_print_result("无长碍","深称爱")
+    test_align_print_windows_result("无长碍","深称爱")
     # valid("哎阿斯顿发",5)
     # game_simulation(326)
     # my_align("\033[31;1ms\033[0mh\033[32;1men\033[33;1mg\033[0m1",8)
