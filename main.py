@@ -4,8 +4,10 @@
 #重点搞定judge函数，并完成单元测试 OK
 #写好game_simulation流程框架 OK
 #鱼yu晕yun轮lun的问题   OK
+#introduction 欢迎及规则介绍 OK
 #提示系统
 #速查表系统
+#目前已有信息的整理系统
 #UI
 #处理一不、33=23等转调风格
 #贝使用自定义拼音风格
@@ -17,9 +19,9 @@ from random import randrange
 from datetime import datetime
 # import chinese
 from colorama import init, Fore, Back
-# init(autoreset=True)
+init(autoreset=True)
 
-def game_simulation(seed=0,trys=10):
+def game_simulation(seed=0,trys=8):
     word_len = 4
     with open("chengyu2231.txt",'r',encoding='utf-8') as f:
         chengyu_list = f.read().rstrip('\n').splitlines()
@@ -49,8 +51,23 @@ def game_simulation(seed=0,trys=10):
                 print("congratulations! you have won! \033[35;1mloving U,贝\033[0m. Try times =", i)
             return
     print("You have used out your chances, True Answer is {0}\n"
-          " please start another game~".format(chosen_word))
-
+          " you can start another game~".format(chosen_word))
+def print_introduction():
+    print("Welcome to 贝兜！which is developed for the \033[35;1mbest GF\033[0m in my world")
+    print("这是个简单的猜成语游戏，chengyu2231.txt文档为游戏的成语库，可自行修改,成语来源：http://chengyu.t086.com/\n"
+          "，已精选常用成语。您有八次机会猜当前的成语，每次猜测后，声母，韵母，声调，字形四种元素的颜色\n"
+          "均会提示您当前词语与正确答案的区别。其中，白色代表当前词不存在这一元素；黄色代表当前词存在这\n"
+          "一元素，然而元素位置不正确；绿色代表当前词存在这一元素且元素位置正确；蓝色代表声母韵母被正确\n"
+          "组合,即正确答案中存在当前组合形成的字音，但位置不正确。在下面样例中，正确答案是\"门庭若市\"\n")
+    test_align_print_windows_result("门庭若市", "谁主沉浮")
+    test_align_print_windows_result("门庭若市","班门弄斧")
+    test_align_print_windows_result("门庭若市", "门厅喧闹")
+    test_align_print_windows_result("门庭若市", "门庭若市")
+    print("由于第一次猜测\"谁主沉浮\"中声母sh和韵母en在答案\"门庭若市\"中均存在，然而猜测的位置不正确\n"
+          "，因此被标黄。第二次猜测中，men这一组合在答案中存在但位置错误，因此被标蓝。第三次猜测中，因为\n"
+          "\"门\"的字音及字形均正确，\"ting\"的声母+韵母是正确且对位的，因此都标为绿色。\n"
+          "p.s. 请放心使用多音字和口语变调，比如\"不翼而飞\"的\"不\"为第二声，\"一唱一和\"的\"和\"为第四声\n\n"
+          "好啦，我现在想好一个，来试试几次就可以猜出来吧")
 def valid(try_word, word_len):
     try_word = try_word.strip()
     if len(try_word) != word_len:
@@ -106,21 +123,21 @@ def get_lazy_pinyin(word):
     # print("yunmu: ",yunmu_list)
     #再加上自定义转调规则
     return tone,word_notone,shengmu_list,yunmu_list
-def get_initial_final(word):
-    for i in pinyin(word, style=Style.INITIALS):
-        print("initials :",i)
-    for i in pinyin(word, style=Style.FINALS):
-        print("finals: ",i)
-def get_initial_final_Notstrict(word):
-    for i in pinyin(word, strict=False,style=Style.INITIALS):
-        print("initials :",i)
-    for i in pinyin(word, strict=False,style=Style.FINALS):
-        print("finals: ",i)
-def get_initial_final_practical(word):
-    for i in pinyin(word, strict=False,style=Style.INITIALS):
-        print("initials :",i)
-    for i in pinyin(word, strict=True,v_to_u=True,style=Style.FINALS):
-        print("finals: ",i)
+# def get_initial_final(word):
+#     for i in pinyin(word, style=Style.INITIALS):
+#         print("initials :",i)
+#     for i in pinyin(word, style=Style.FINALS):
+#         print("finals: ",i)
+# def get_initial_final_Notstrict(word):
+#     for i in pinyin(word, strict=False,style=Style.INITIALS):
+#         print("initials :",i)
+#     for i in pinyin(word, strict=False,style=Style.FINALS):
+#         print("finals: ",i)
+# def get_initial_final_practical(word):
+#     for i in pinyin(word, strict=False,style=Style.INITIALS):
+#         print("initials :",i)
+#     for i in pinyin(word, strict=True,v_to_u=True,style=Style.FINALS):
+#         print("finals: ",i)
 def judge(ans_word,try_word): #输出整体注音、声母、韵母、音调、汉字所有的正确性
     hanzi = judge_unit(ans_word,try_word)
     tone1,word_notone1, shengmu1, yunmu1 = get_lazy_pinyin(ans_word)
@@ -197,7 +214,7 @@ def print_result(trying,hanzi,tone,word_notone,shengmu,yunmu,word_notone2,tone2,
 
         if tone[idx] == 2:
             pinyin_string = pinyin_string+"\033[32;1m{0}\033[0m".format(tone2[idx])
-        elif hanzi[idx] == 1:
+        elif tone[idx] == 1:
             pinyin_string=pinyin_string+"\033[33;1m{0}\033[0m".format(tone2[idx])
         else:
             pinyin_string=pinyin_string+"{0}".format(tone2[idx])
@@ -214,6 +231,70 @@ def print_result(trying,hanzi,tone,word_notone,shengmu,yunmu,word_notone2,tone2,
         else:
             hanzi_string=hanzi_string+"\033[37;40;1m{0}\033[0m".format(trying[idx])
         hanzi_string = my_align(hanzi_string,8)
+        # print(hanzi_string)
+        all_hanzi_string +=hanzi_string
+    print(all_hanzi_string)
+def align_print_windows_result(align_len,trying,hanzi,tone,word_notone,shengmu,yunmu,word_notone2,tone2,shengmu2,yunmu2):#两行，第一行注音，第二行文字
+    num = len(trying)
+    hanzi_spaces,pinyin_spaces = [],[]
+    for i in range(num):
+        hanzi_spaces.append(calculate_spaces(trying[i],align_len))
+        pinyin_spaces.append(calculate_spaces(word_notone2[i]+tone2[i],align_len))
+    all_hanzi_string,all_pinyin_string = "",""
+    for idx in range(num):
+        #如果整体完全对，就整体绿
+        #如果整体对了但位置不对，就整体蓝，除非其中有绿色的声母或韵母，换句话说绿+蓝或者蓝+绿，所以和声母是否为None无关
+        #如果整体不对，就按普通的声母+韵母。
+        pinyin_string = pinyin_spaces[idx][0]
+
+        if shengmu2[idx] is None:
+            shengmu2[idx] = ''
+        if word_notone[idx] == 2:
+            pinyin_string = pinyin_string+Fore.GREEN+"{0}".format(word_notone2[idx])+Fore.RESET
+        elif word_notone[idx] == 1:
+            if shengmu[idx] == 2:
+                pinyin_string = pinyin_string +Fore.GREEN+"{0}".format(shengmu2[idx])+Fore.BLUE+"{0}".format(yunmu2[idx])+Fore.RESET
+            elif yunmu[idx] == 2:
+                pinyin_string = pinyin_string +Fore.BLUE+ "{0}".format(shengmu2[idx])+Fore.GREEN+"{0}".format(yunmu2[idx])+Fore.RESET
+            else:
+                pinyin_string = pinyin_string +Fore.BLUE+ "{0}".format(word_notone2[idx])+Fore.RESET
+        else:
+            if shengmu[idx] == 2:
+                pinyin_string = pinyin_string + Fore.GREEN+"{0}".format(shengmu2[idx]) +Fore.RESET
+            elif shengmu[idx] == 1:
+                pinyin_string = pinyin_string + Fore.YELLOW+"{0}".format(shengmu2[idx])+Fore.RESET
+            else:
+                pinyin_string = pinyin_string + "{0}".format(shengmu2[idx])
+            if yunmu[idx] == 2:
+                pinyin_string = pinyin_string + Fore.GREEN+"{0}".format(yunmu2[idx])+Fore.RESET
+            elif yunmu[idx] == 1:
+                pinyin_string = pinyin_string + Fore.YELLOW+"{0}".format(yunmu2[idx])+Fore.RESET
+            else:
+                pinyin_string = pinyin_string + "{0}".format(yunmu2[idx])
+
+        if tone[idx] == 2:
+            pinyin_string = pinyin_string+Fore.GREEN+"{0}".format(tone2[idx])+Fore.RESET
+        elif tone[idx] == 1:
+            pinyin_string=pinyin_string+Fore.YELLOW+"{0}".format(tone2[idx])+Fore.RESET
+        else:
+            pinyin_string=pinyin_string+"{0}".format(tone2[idx])
+        # pinyin_string = my_align(pinyin_string,8)
+        pinyin_string +=pinyin_spaces[idx][1]
+        # print(pinyin_string)
+        all_pinyin_string += pinyin_string
+    print(all_pinyin_string)
+    for idx in range(num):
+        hanzi_string = hanzi_spaces[idx][0]
+        if idx>=2 and idx%2 == 0: #每两个中文字加一个空格，为了弥补中文在显示时1:1.67但计算时用的1:2的问题
+            hanzi_string += ' '
+        if hanzi[idx] == 2:
+            hanzi_string = hanzi_string+ Fore.BLACK+Back.GREEN+"{0}".format(trying[idx])+Fore.RESET+Back.RESET
+        elif hanzi[idx] == 1:
+            hanzi_string=hanzi_string+Fore.BLACK+Back.YELLOW+"{0}".format(trying[idx])+Fore.RESET+Back.RESET
+        else:
+            hanzi_string=hanzi_string+Fore.WHITE+Back.BLACK+"{0}".format(trying[idx])+Fore.RESET+Back.RESET
+        # hanzi_string = my_align(hanzi_string,8)
+        hanzi_string +=hanzi_spaces[idx][1]
         # print(hanzi_string)
         all_hanzi_string +=hanzi_string
     print(all_hanzi_string)
@@ -261,68 +342,6 @@ def calculate_spaces(string, align_len): #默认居中
     len_sp = align_len - len_ch - len_en  # 补充空格总数
     return (' '* int(len_sp / 2),' ' * (len_sp - int(len_sp / 2)))
 
-def align_print_windows_result(align_len,trying,hanzi,tone,word_notone,shengmu,yunmu,word_notone2,tone2,shengmu2,yunmu2):#两行，第一行注音，第二行文字
-    num = len(trying)
-    hanzi_spaces,pinyin_spaces = [],[]
-    for i in range(num):
-        hanzi_spaces.append(calculate_spaces(trying[i],align_len))
-        pinyin_spaces.append(calculate_spaces(word_notone2[i]+tone2[i],align_len))
-    all_hanzi_string,all_pinyin_string = "",""
-    for idx in range(num):
-        #如果整体完全对，就整体绿
-        #如果整体对了但位置不对，就整体蓝，除非其中有绿色的声母或韵母，换句话说绿+蓝或者蓝+绿，所以和声母是否为None无关
-        #如果整体不对，就按普通的声母+韵母。
-        pinyin_string = pinyin_spaces[idx][0]
-        if shengmu2[idx] is None:
-            shengmu2[idx] = ''
-        if word_notone[idx] == 2:
-            pinyin_string = pinyin_string+Fore.GREEN+"{0}".format(word_notone2[idx])+Fore.RESET
-        elif word_notone[idx] == 1:
-            if shengmu[idx] == 2:
-                pinyin_string = pinyin_string +Fore.GREEN+"{0}".format(shengmu2[idx])+Fore.BLUE+"{0}".format(yunmu2[idx])+Fore.RESET
-            elif yunmu[idx] == 2:
-                pinyin_string = pinyin_string +Fore.BLUE+ "{0}".format(shengmu2[idx])+Fore.GREEN+"{0}".format(yunmu2[idx])+Fore.RESET
-            else:
-                pinyin_string = pinyin_string +Fore.BLUE+ "{0}".format(word_notone2[idx])+Fore.RESET
-        else:
-            if shengmu[idx] == 2:
-                pinyin_string = pinyin_string + Fore.GREEN+"{0}".format(shengmu2[idx]) +Fore.RESET
-            elif shengmu[idx] == 1:
-                pinyin_string = pinyin_string + Fore.YELLOW+"{0}".format(shengmu2[idx])+Fore.RESET
-            else:
-                pinyin_string = pinyin_string + "{0}".format(shengmu2[idx])
-            if yunmu[idx] == 2:
-                pinyin_string = pinyin_string + Fore.GREEN+"{0}".format(yunmu2[idx])+Fore.RESET
-            elif yunmu[idx] == 1:
-                pinyin_string = pinyin_string + Fore.YELLOW+"{0}".format(yunmu2[idx])+Fore.RESET
-            else:
-                pinyin_string = pinyin_string + "{0}".format(yunmu2[idx])
-
-        if tone[idx] == 2:
-            pinyin_string = pinyin_string+Fore.GREEN+"{0}".format(tone2[idx])+Fore.RESET
-        elif hanzi[idx] == 1:
-            pinyin_string=pinyin_string+Fore.YELLOW+"{0}".format(tone2[idx])+Fore.RESET
-        else:
-            pinyin_string=pinyin_string+"{0}".format(tone2[idx])
-        # pinyin_string = my_align(pinyin_string,8)
-        pinyin_string +=pinyin_spaces[idx][1]
-        # print(pinyin_string)
-        all_pinyin_string += pinyin_string
-    print(all_pinyin_string)
-    for idx in range(num):
-        hanzi_string = hanzi_spaces[idx][0]
-        if hanzi[idx] == 2:
-            hanzi_string = hanzi_string+ Fore.BLACK+Back.GREEN+"{0}".format(trying[idx])+Fore.RESET+Back.RESET
-        elif hanzi[idx] == 1:
-            hanzi_string=hanzi_string+Fore.BLACK+Back.YELLOW+"{0}".format(trying[idx])+Fore.RESET+Back.RESET
-        else:
-            hanzi_string=hanzi_string+Fore.WHITE+Back.BLACK+"{0}".format(trying[idx])+Fore.RESET+Back.RESET
-        # hanzi_string = my_align(hanzi_string,8)
-        hanzi_string +=hanzi_spaces[idx][1]
-        # print(hanzi_string)
-        all_hanzi_string +=hanzi_string
-    print(all_hanzi_string)
-
 def test_unit():
     # with open("test.txt",'r',encoding="utf-8") as f:
         # words = f.read().rstrip('\n').splitlines()
@@ -343,4 +362,9 @@ def test_unit():
     pass
 if __name__ == '__main__':
     # test_unit()
-    game_simulation()
+    print_introduction()
+    while True:
+        game_simulation()
+        input("还想玩吗？想玩的话请按回车即可以开始下一局，不想玩关闭程序即可。"
+              "如游戏太难惹怒了您，请右转到男朋友对话框去打男朋友，如能顺便提出修改意见\n"
+              "给男朋友知错就改的机会就更好了，谢谢配合。")
